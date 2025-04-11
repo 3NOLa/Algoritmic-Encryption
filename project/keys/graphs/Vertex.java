@@ -14,6 +14,13 @@ public class Vertex
         edges = new LinkedList<>();
     }
 
+    public Vertex()
+    {
+        this.value = (int)(Math.random() * 255);
+        this.inDegree = 0;
+        edges = new LinkedList<>();
+    }
+
     public void setValue(int value)
     {
         this.value = value;

@@ -87,6 +87,20 @@ public class Ksequence {
         return amount;
     }
 
+    public int getSolutionAmount()
+    {
+        return this.count;
+    }
+
+    public ArrayList<int[]> getSolutions()
+    {
+        return this.solutions;
+    }
+
+    public byte[] getKey16()
+    {
+        return new byte[16];
+    }
 
     public void printSolutions()
     {
@@ -97,16 +111,6 @@ public class Ksequence {
 
             System.out.println();
         }
-    }
-
-    public int getSolutionAmount()
-    {
-        return this.count;
-    }
-
-    public ArrayList<int[]> getSolutions()
-    {
-        return this.solutions;
     }
 
 }

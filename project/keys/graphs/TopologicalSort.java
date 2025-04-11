@@ -1,4 +1,5 @@
 package project.keys.graphs;
+
 import java.util.HashSet;
 import java.util.LinkedList;
 
@@ -40,5 +41,22 @@ public class TopologicalSort {
         }
         
         sorted.addFirst(v);
+    }
+
+    public byte[] getKey16()
+    {
+        int size = sorted.size();
+        if(size == 0) traceVertcies();
+        
+        byte key[] = new byte[16];
+
+        for(int i=0;i<16;i++)
+        {
+            Vertex v = sorted.get(i % size);
+            byte keyValue = (byte) v.getValue();
+            key[i] = keyValue;
+        }
+
+        return key;
     }
 }

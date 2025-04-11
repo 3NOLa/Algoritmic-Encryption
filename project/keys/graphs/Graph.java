@@ -26,9 +26,7 @@ abstract public class Graph {
     {
         for(int i = 0;i<this.nodeCount;i++)
         {
-            int value = (int)(Math.random() * 100);
-            Vertex node = new Vertex(value);
-
+            Vertex node = new Vertex();
             this.vertices.add(node);
         }
 
