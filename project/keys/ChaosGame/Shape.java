@@ -9,6 +9,7 @@ public class Shape implements Keys{
     
     private int verticesAmount;
     private Point2D[] vertices;
+    public Point2D firstPoint;
     private final int Password;
     private Random rand;
     private final int WIDTH;
@@ -76,7 +77,8 @@ public class Shape implements Keys{
             y = (int) (minY + rand.nextDouble(maxY - minY));
         }while(!rayCastingAlgo(x, y));
 
-        return new Point(x,y);
+        this.firstPoint = new Point(x,y);
+        return this.firstPoint;
     }
 
     public boolean rayCastingAlgo(int x, int y) {
@@ -98,7 +100,25 @@ public class Shape implements Keys{
         return inside;
     }
     public byte[] getKey16(){
-        return new byte[16];
+        byte key[] = new byte[16];
+
+        if(this.firstPoint == null)this.firstPoint = generateRandomPoint();
+
+        byte first = (byte)((int)((this.firstPoint.getX() + this.firstPoint.getY() / 32) + 1) & 0xFF);
+        key[0] =first;
+
+        Point2D currentPoint = this.firstPoint;
+        for(int i=1;i<16;i++)
+        {
+            Point2D p = nextFractalPoint(currentPoint);
+
+            byte k = (byte)((int)((p.getX() + p.getY() / 32) + 1) & 0xFF);
+            key[i] = k;
+
+            currentPoint = p;
+        }
+        
+        return key;
     }
 
     public Point2D[] getVertices(){

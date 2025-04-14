@@ -3,18 +3,21 @@ import project.keys.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
 
 public class Ksequence implements Keys{
     
     private int k;
     private int n;
     private int count;
+    private Random rand;
     private ArrayList<int[]> solutions;
 
-    public Ksequence(int k, int n)
+    public Ksequence(int k, int n,int seed)
     {
         this.k = k;
         this.n = n;
+        this.rand = new Random(seed);
         solutions = new ArrayList<>();
         this.count = 0;
     }
@@ -101,7 +104,21 @@ public class Ksequence implements Keys{
 
     public byte[] getKey16()
     {
-        return new byte[16];
+        byte key[] =  new byte[16];
+
+        if (count == 0)findSolutionsAmount();
+        
+        for(int i=0;i<16;i++)
+        {
+            int randSolutionIndex = rand.nextInt(this.count);
+            int keySolution = 0;
+            for(int j=0;j<this.k;j++)
+                keySolution += solutions.get(randSolutionIndex)[j];
+
+            key[i] = (byte)(keySolution & 0xFF);
+        }
+
+        return key;
     }
 
     public void printSolutions()
@@ -120,7 +137,7 @@ public class Ksequence implements Keys{
 class main5
 {
     public static void main(String[] args) {
-        Ksequence s = new Ksequence(3, 5);
+        Ksequence s = new Ksequence(6, 50,1234);//k=6 , n=50 java max heap space;
         s.findKseqnces();
         s.printSolutions();
         s.findKiterative();

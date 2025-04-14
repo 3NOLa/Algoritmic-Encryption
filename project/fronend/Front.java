@@ -202,8 +202,8 @@ class action extends JPanel
 		activateAlgo();
 
 		new Thread(()->{
-			runEncryption();
-			//runDecryption();
+			//runEncryption();
+			runDecryption();
 			System.out.println("finished encryption");
 		}).start();
 
@@ -233,7 +233,8 @@ class action extends JPanel
 
 	private JPanel ChaosgameActive()
 	{
-		int verticesAmount =(int)(FilePtr.length() % 4) + 3;
+		int verticesAmount =(int)(FileSizeEncrypt % 4) + 3;
+		System.out.println(verticesAmount);
 		int seed = (FileSizeEncrypt % 10000) + 1;
 		Shape shape = new Shape(seed, verticesAmount, this.WIDTH, this.HEIGHT);
 		ChaosgamePanel ch =new ChaosgamePanel(shape);
@@ -245,12 +246,12 @@ class action extends JPanel
 
 	private void KsequenceActive()
 	{
-		int k = (int)(FilePtr.length() % 5) + 1;
-		int n = (int)(FilePtr.length() % 5) + 1;
-		Ksequence s = new Ksequence(k, n);
+		int k = (int)(FileSizeEncrypt % 5) + 1;
+		int n = (int)(FileSizeEncrypt % 10) + 1;
+		int seed = (FileSizeEncrypt % 10000) + 1;
+		Ksequence s = new Ksequence(k, n,seed);
 		s.findKseqnces();
 		s.printSolutions();
-		s.findKiterative();
 
 		this.key = s;
 	}

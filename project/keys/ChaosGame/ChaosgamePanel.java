@@ -25,7 +25,7 @@ public class ChaosgamePanel extends JPanel implements ActionListener{
         this.shape = shape;
         shape.printVertices();
 
-        currentPoint = shape.generateRandomPoint();
+        currentPoint = (this.shape.firstPoint != null)? this.shape.firstPoint : this.shape.generateRandomPoint();
 
         timer = new Timer(30, this);
         timer.start();
