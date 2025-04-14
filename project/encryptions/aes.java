@@ -215,16 +215,12 @@ public class aes {
         return roundKeys;
     }
     
-    public byte[] encrypt(byte[] plaintext, byte[] key) {
-        byte expandKey[][][] = expandKey(key);
-
+    public byte[] encrypt(byte[] plaintext, byte expandKey[][][]) {
         byte[][] state = new byte[4][4];
         for (int i = 0; i < 4; i++) 
             for (int j = 0; j < 4; j++) 
                 state[j][i] = plaintext[i * 4 + j];
             
-        
-
         addRoundKey(state, expandKey[0]);
 
         for(int i=1;i<=9;i++)
@@ -248,17 +244,13 @@ public class aes {
         return ciphertext;
     }
 
-    public byte[] decrypt(byte[] ciphertext, byte[] key){
-        byte expandKey[][][] = expandKey(key);
-
+    public byte[] decrypt(byte[] ciphertext, byte expandKey[][][]){
         byte[][] state = new byte[4][4];
 
         for (int i = 0; i < 4; i++) 
             for (int j = 0; j < 4; j++) 
                 state[j][i] = ciphertext[i * 4 + j];
             
-        
-
         addRoundKey(state, expandKey[10]);
         invShiftRows(state);
         invSubBytes(state);
@@ -328,22 +320,31 @@ public class aes {
     public File encryptFile(File f, byte[] key)
     {
         File encrypted = new File(f.getParent(),changeFileName(f, "encrypted"));
+        byte expandKey[][][] = expandKey(key);
         byte plaintext[] = new byte[16];
         byte cipher[];
         try{
             FileInputStream filein = new FileInputStream(f);
             FileOutputStream fileout = new FileOutputStream(encrypted);
+            boolean addPadding = false;
             int amountofBytes;
 
             while ((amountofBytes = filein.read(plaintext)) != -1) {
                 if (amountofBytes < 16 && filein.available() ==  0) {
                     for (int i = amountofBytes; i < 16; i++) plaintext[i] = 0;
                     padding(plaintext, amountofBytes);
+                    addPadding = true;
                 }
-                cipher = encrypt(plaintext, key);
+                cipher = encrypt(plaintext, expandKey);
                 fileout.write(cipher);
             }
 
+            if (!addPadding) {
+                padding(plaintext, 0);
+                cipher = encrypt(plaintext, expandKey);
+                fileout.write(cipher);
+            }
+            
             fileout.close();
             filein.close();
         }
@@ -357,6 +358,7 @@ public class aes {
 
     public File decryptFile(File f, byte[] key) {
         File decrypted = new File(f.getParent(),changeFileName(f, "decrypted"));
+        byte expandKey[][][] = expandKey(key);
         try {
             FileInputStream filein = new FileInputStream(f);
             FileOutputStream fileout = new FileOutputStream(decrypted);
@@ -369,13 +371,13 @@ public class aes {
             for (int i = 0; i < numBlocks - 1; i++) {
                 filein.read(cipherBlock);
                 
-                plainBlock = decrypt(cipherBlock, key); 
+                plainBlock = decrypt(cipherBlock, expandKey); 
                 fileout.write(plainBlock);
                 for (int j = 0; j < 16; j++) cipherBlock[j] = 0;
             }
 
             filein.read(cipherBlock);
-            plainBlock = decrypt(cipherBlock, key);
+            plainBlock = decrypt(cipherBlock, expandKey);
             byte[] unpaddedBlock = invPadding(plainBlock);
             fileout.write(unpaddedBlock);
             
@@ -401,6 +403,7 @@ public class aes {
         byte data[] = new byte[16];
         for(int i=0;i<16;i++)
             data[i] = (byte)(i * 2);
+        byte expandKey[][][] = a.expandKey(key);
 
         System.out.println("\n");
             System.out.print("origanal data: = ");
@@ -408,13 +411,13 @@ public class aes {
             System.out.print(data[i] + ", ");
         System.out.println("\n");
 
-        byte encryptData[] = a.encrypt(data, key);
+        byte encryptData[] = a.encrypt(data, expandKey);
         System.out.print("encrypted data: = ");
         for(int i=0;i<16;i++)
             System.out.print(encryptData[i] + ", "); 
         System.out.println("\n");
 
-        byte decryptedptData[] = a.decrypt(encryptData, key);
+        byte decryptedptData[] = a.decrypt(encryptData, expandKey);
         System.out.print("decrypted data: = ");
         for(int i=0;i<16;i++)
             System.out.print(decryptedptData[i] + ", ");

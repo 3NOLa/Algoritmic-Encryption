@@ -55,4 +55,16 @@ public class Vertex
     {
         this.edges.removeLast();
     }
+
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Vertex)) return false;
+        Vertex other = (Vertex) obj;
+        return this.value == other.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(value);
+    }
 }

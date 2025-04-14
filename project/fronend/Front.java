@@ -1,5 +1,7 @@
 package project.fronend;
 
+import project.encryptions.aes;
+import project.keys.*;
 import project.keys.ChaosGame.*;
 import project.keys.ChaosGame.Shape;
 import project.keys.Kseq.*;
@@ -14,14 +16,14 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-interface FileSelectedListener {
-    void onFileSelected(File file);
-}
-
 enum encryptionType{
 	Chaosgame,
 	Ksequence,
 	TopologicalSort
+}
+
+interface FileSelectedListener {
+    void onFileSelected(File file);
 }
 
 interface encryptionTypeListener{
@@ -48,7 +50,6 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
         panelContainer = new JPanel(cardLayout);
 
 		panelContainer.add(new Jopen(this,cardLayout,panelContainer), "Panel 1");
-        panelContainer.add(new encryptionSelect(this,cardLayout,panelContainer), "Panel 2");
 
         add(panelContainer);
 
@@ -59,6 +60,19 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 	{
 		this.selectedFile = file;
 		System.out.println("Main class received file: " + selectedFile.getAbsolutePath());
+
+		boolean alreadyExists = false;
+		for (Component comp : panelContainer.getComponents()) {
+			if ("Panel 2".equals(panelContainer.getLayout().toString())) {
+				alreadyExists = true;
+				break;
+			}
+		}
+
+		if (!alreadyExists) 
+			panelContainer.add(new encryptionSelect(this,cardLayout,panelContainer), "Panel 2");
+		
+		cardLayout.show(panelContainer, "Panel 2");
 	}
 
 	public 	void onEncryptionSelected(encryptionType enctype)
@@ -66,10 +80,18 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 		this.selecteEncryption = enctype;
 		System.out.println("Main class recived encryption type:" + selecteEncryption.toString());
 
-		JPanel actionPanel = new action(selecteEncryption, cardLayout, panelContainer,selectedFile);
-        panelContainer.add(actionPanel, "Panel 3");
+        boolean alreadyExists = false;
+		for (Component comp : panelContainer.getComponents()) {
+			if ("Panel 3".equals(panelContainer.getLayout().toString())) {
+				alreadyExists = true;
+				break;
+			}
+		}
 
-        cardLayout.show(panelContainer, "Panel 3");
+		if (!alreadyExists) 
+			panelContainer.add(new action(selecteEncryption, cardLayout, panelContainer, selectedFile), "Panel 3");
+
+		cardLayout.show(panelContainer, "Panel 3");
 	}
 	
 	public static void main(String[] args) 
@@ -82,14 +104,10 @@ class Jopen extends JPanel implements ActionListener
 {
 	private final int WIDTH = 800;
     private final int HEIGHT = 800;
-	private CardLayout cardLayout;
-    private JPanel panelContainer;
     private FileSelectedListener listener;
 
 	public Jopen(FileSelectedListener listener,CardLayout cardLayout, JPanel panelContainer)
 	{
-		this.cardLayout = cardLayout;
-        this.panelContainer = panelContainer;
 		this.listener = listener;
 		setLayout(new FlowLayout());
 		setPreferredSize(new Dimension(WIDTH,HEIGHT));
@@ -113,7 +131,6 @@ class Jopen extends JPanel implements ActionListener
                 listener.onFileSelected(f);
             }	
 		}
-		cardLayout.show(panelContainer, "Panel 2");
 	}
 
 }
@@ -122,14 +139,10 @@ class encryptionSelect extends JPanel implements ActionListener
 {
 	private final int WIDTH = 800;
     private final int HEIGHT = 800;
-	private CardLayout cardLayout;
-    private JPanel panelContainer;
     private encryptionTypeListener listener;
 
 	public encryptionSelect(encryptionTypeListener listener,CardLayout cardLayout, JPanel panelContainer)
 	{
-		this.cardLayout = cardLayout;
-        this.panelContainer = panelContainer;
 		this.listener = listener;
 		setLayout(new FlowLayout());
 		setPreferredSize(new Dimension(WIDTH,HEIGHT));
@@ -168,6 +181,9 @@ class action extends JPanel
 	private final int WIDTH = 800;
     private final int HEIGHT = 800;
 	private File FilePtr;
+	private int FileSizeEncrypt;
+	private Keys key;
+	JPanel algoPanel;
 	private CardLayout cardLayout;
     private JPanel panelContainer;
 	encryptionType type;
@@ -175,6 +191,8 @@ class action extends JPanel
 	public action(encryptionType type,CardLayout cardLayout, JPanel panelContainer,File FilePtr)
 	{
 		this.FilePtr = FilePtr;
+		this.FileSizeEncrypt = (int)((FilePtr.length() + 15)/ 16) * 16;
+		System.out.println("file size: " + FileSizeEncrypt);
 		this.type = type;
 		this.cardLayout = cardLayout;
 		this.panelContainer = panelContainer;
@@ -183,36 +201,45 @@ class action extends JPanel
 		
 		activateAlgo();
 
+		new Thread(()->{
+			runEncryption();
+			//runDecryption();
+			System.out.println("finished encryption");
+		}).start();
+
 		//this.cardLayout.show(this.panelContainer, "Panel 1");
 	}
 
 	private void activateAlgo()
 	{
-		JPanel algo;
 		switch (this.type) {
 			case Chaosgame:
-				algo = ChaosgameActive();
+				algoPanel = ChaosgameActive();
 				break;
 			case Ksequence:
 				KsequenceActive();
-				algo = new JPanel();
+				algoPanel = new JPanel();
 				break;
 			case TopologicalSort:
-				algo = TopologicalSortActive();
+				algoPanel = TopologicalSortActive();
 				break;
 			default:
-				algo = new JPanel();
+				algoPanel = new JPanel();
 				System.out.println("erorr in choosing algoritem");
 				break;
 		}
-		add(algo);
+		add(algoPanel);
 	}
 
 	private JPanel ChaosgameActive()
 	{
 		int verticesAmount =(int)(FilePtr.length() % 4) + 3;
-		Shape shape = new Shape(1234, verticesAmount, this.WIDTH, this.HEIGHT);
+		int seed = (FileSizeEncrypt % 10000) + 1;
+		Shape shape = new Shape(seed, verticesAmount, this.WIDTH, this.HEIGHT);
 		ChaosgamePanel ch =new ChaosgamePanel(shape);
+
+		this.key = shape;
+
 		return ch;
 	}
 
@@ -224,20 +251,39 @@ class action extends JPanel
 		s.findKseqnces();
 		s.printSolutions();
 		s.findKiterative();
+
+		this.key = s;
 	}
 
 	private JPanel TopologicalSortActive()
 	{
-		int nodeCount = (int)(FilePtr.length() % 25);
-		int averageDegree = (int)(FilePtr.length() % 5);
-		DirectedGraph enc = new DirectedGraph("encrypt",nodeCount, averageDegree);
+		int nodeCount = (int)(FileSizeEncrypt % 20);
+		int averageDegree = (int)((FileSizeEncrypt % 25) / 4) + 1;
+		int seed = (FileSizeEncrypt % 10000) + 1;
+		DirectedGraph enc = new DirectedGraph("encrypt",nodeCount, averageDegree,seed);
 
 		enc.generateGraph();
 		visualizeGraph vis = new visualizeGraph(enc);
 		vis.optimizeLayout();
 		vis.printLayers();
-
 		GraphVisualizer gh = new GraphVisualizer(vis);
+
+		TopologicalSort t = new TopologicalSort(enc);
+		this.key = t;
+
 		return gh;
 	}
+
+	private void runEncryption() {
+		byte[] key = this.key.getKey16();
+		aes a = new aes();
+		a.encryptFile(FilePtr, key);
+	}
+	
+	private void runDecryption() {
+		byte[] key = this.key.getKey16();
+		aes a = new aes();
+		a.decryptFile(FilePtr, key);
+	}
+	
 }

@@ -1,9 +1,11 @@
 package project.keys.ChaosGame;
+import project.keys.*;
+
 import java.awt.Point;
 import java.awt.geom.*;
 import java.util.Random;
 
-public class Shape {
+public class Shape implements Keys{
     
     private int verticesAmount;
     private Point2D[] vertices;
@@ -94,6 +96,9 @@ public class Shape {
         }
 
         return inside;
+    }
+    public byte[] getKey16(){
+        return new byte[16];
     }
 
     public Point2D[] getVertices(){

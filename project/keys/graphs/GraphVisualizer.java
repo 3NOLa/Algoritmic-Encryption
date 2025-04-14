@@ -6,13 +6,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GraphVisualizer extends JPanel {
-    private static final int NODE_RADIUS = 20;
-    private static final int VERTICAL_SPACING = 75;
-    private static final int HORIZONTAL_SPACING = 150;
+    private static final int NODE_RADIUS = 15;
+    private static final int VERTICAL_SPACING = 50;
+    private static final int HORIZONTAL_SPACING = 100;
     private final visualizeGraph layoutManager;
     private final HashMap<Vertex, Point2D> vertexPositions;
     private int height = 800;
-    private int width = 600;
+    private int width = 800;
 
     public GraphVisualizer(visualizeGraph layoutManager) {
         this.layoutManager = layoutManager;

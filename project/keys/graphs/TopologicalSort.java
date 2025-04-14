@@ -1,9 +1,10 @@
 package project.keys.graphs;
+import project.keys.*;
 
 import java.util.HashSet;
 import java.util.LinkedList;
 
-public class TopologicalSort {
+public class TopologicalSort implements Keys{
     
     Graph graph;
     HashSet<Vertex> visited;
@@ -47,6 +48,7 @@ public class TopologicalSort {
     {
         int size = sorted.size();
         if(size == 0) traceVertcies();
+        size = sorted.size();
         
         byte key[] = new byte[16];
 
@@ -58,5 +60,12 @@ public class TopologicalSort {
         }
 
         return key;
+    }
+
+    public void printSorted()
+    {
+        System.out.print("topological sorted graph: ");
+        for(Vertex v : sorted)
+            System.out.print(v.getValue() + ", ") ;
     }
 }

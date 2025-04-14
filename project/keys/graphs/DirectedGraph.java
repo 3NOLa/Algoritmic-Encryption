@@ -1,8 +1,12 @@
+package project.keys.graphs;
+
+import java.util.ArrayList;
+
 public class DirectedGraph extends Graph{
 
-    public DirectedGraph(String name,int nodeCount,int averageDegree)
+    public DirectedGraph(String name,int nodeCount,int averageDegree,int seed)
     {
-        super(name, nodeCount, averageDegree);
+        super(name, nodeCount, averageDegree,seed);
     }
 
     public void addEdge(Vertex from, Vertex to)
@@ -23,7 +27,7 @@ public class DirectedGraph extends Graph{
             while (j>0 && loops < this.nodeCount) {
 
                 
-                int randomIndex = (int)(Math.random() * this.nodeCount);
+                int randomIndex = super.rand.nextInt(this.nodeCount);
                 Vertex randomVertic = this.vertices.get(randomIndex);
 
                 if (randomVertic != v && !checkCycle(randomVertic, v)) {
@@ -35,6 +39,21 @@ public class DirectedGraph extends Graph{
             }
 
             super.removeDuplicates(v);
+        }
+    }
+
+    public void generateAllEdges()
+    {
+        for(Vertex v : super.vertices)
+        {
+            for(Vertex e : super.vertices)
+            {
+                if(v != e && !e.getEdges().contains(v) && !checkCycle(v, e)){
+                    addEdge(v, e);
+                    e.addInDgree();
+                }
+                    
+            }
         }
     }
 

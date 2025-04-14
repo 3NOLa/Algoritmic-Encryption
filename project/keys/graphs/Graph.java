@@ -7,12 +7,14 @@ abstract public class Graph {
     int nodeCount;
     int averageDegree;
     ArrayList<Vertex> vertices;
+    protected Random rand;
 
-    public Graph(String name,int nodeCount,int averageDegree)
+    public Graph(String name,int nodeCount,int averageDegree,int seed)
     {
         this.name = name;
         this.nodeCount = nodeCount;
         this.averageDegree = averageDegree;
+        this.rand = new Random(seed);
         vertices = new ArrayList<>();
     }
 
@@ -26,7 +28,8 @@ abstract public class Graph {
     {
         for(int i = 0;i<this.nodeCount;i++)
         {
-            Vertex node = new Vertex();
+            int vertexValue = rand.nextInt(255);
+            Vertex node = new Vertex(vertexValue);
             this.vertices.add(node);
         }
 
@@ -88,9 +91,9 @@ abstract public class Graph {
 
 class UndirectedGraph extends Graph{
 
-    public UndirectedGraph(String name,int nodeCount,int averageDegree)
+    public UndirectedGraph(String name,int nodeCount,int averageDegree,int seed)
     {
-        super(name, nodeCount, averageDegree);
+        super(name, nodeCount, averageDegree,seed);
     }
 
     public void addEdge(Vertex a, Vertex b)
@@ -163,12 +166,12 @@ class UndirectedGraph extends Graph{
 class main2
 {
     public static void main(String[] args) {
-        Graph gun = new UndirectedGraph("undirected graph", 17, 3);
+        Graph gun = new UndirectedGraph("undirected graph", 17, 3,1234);
         gun.generateGraph();
         System.out.println(gun.toString());
 
-        Graph g = new DirectedGraph("directed graph", 15, 3);
-        g.generateGraph(); 
+        Graph g = new DirectedGraph("directed graph", 15, 3,1234);
+        g.generateGraph();
         System.out.println(g.toString());
         TopologicalSort sort = new TopologicalSort(g);
         LinkedList<Vertex> TopoSort = sort.traceVertcies();

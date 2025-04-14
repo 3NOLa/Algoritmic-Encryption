@@ -1,8 +1,10 @@
 package project.keys.Kseq;
+import project.keys.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Ksequence {
+public class Ksequence implements Keys{
     
     private int k;
     private int n;
