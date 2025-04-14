@@ -5,18 +5,19 @@ import java.awt.event.ActionListener;
 
 import javax.swing.*;
 import java.awt.geom.*;
+import java.awt.image.BufferedImage;
 
 
 public class ChaosgamePanel extends JPanel implements ActionListener{
 
     private final int WIDTH = 800;
-    private final int HEIGHT = 800;
+    private final int HEIGHT = 700;
     private final int FRACTAL_POINTS_PER_STEP = 100;
 
     private Timer timer;
     private Shape shape;
     private Point2D currentPoint;
-    private int count = 0;
+    private BufferedImage canvas;
     
     
     public ChaosgamePanel(Shape shape)
@@ -24,25 +25,42 @@ public class ChaosgamePanel extends JPanel implements ActionListener{
         setPreferredSize(new Dimension(WIDTH,HEIGHT));
         this.shape = shape;
         shape.printVertices();
+        
+        this.currentPoint = (this.shape.firstPoint != null)? this.shape.firstPoint : this.shape.generateRandomPoint();
 
-        currentPoint = (this.shape.firstPoint != null)? this.shape.firstPoint : this.shape.generateRandomPoint();
+        this.canvas = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        drawFractalToImage();
 
         timer = new Timer(30, this);
         timer.start();
     }
 
+    private void drawFractalToImage() {
+        Graphics2D g2 = canvas.createGraphics();
+        g2.setColor(Color.RED);
+        
+        drawShape(g2);
+        drawFractal(g2);
+    
+        g2.dispose();
+    }
+
     @Override
     public void paintComponent(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g;
-        if (count++ < 2)
-            drawShape(g2d);
-        drawFractal(g2d);
+        super.paintComponent(g);
+        g.drawImage(canvas, 0, 0, null);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        repaint(); 
+        Graphics2D g2 = canvas.createGraphics();
+        g2.setColor(Color.RED);
+        drawFractal(g2);   // Add more points each tick
+        g2.dispose();
+
+        repaint();         // Show the new points
     }
+
 
     private void drawShape(Graphics2D g) {
         g.setColor(Color.BLACK);
@@ -72,7 +90,7 @@ public class ChaosgamePanel extends JPanel implements ActionListener{
     public static void displayChaosGame() {
         JFrame frame = new JFrame("Chaos Game");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(new ChaosgamePanel(new Shape(1298, 3, 800,800)));
+        frame.add(new ChaosgamePanel(new Shape(1298, 3, 800,700)));
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);

@@ -1,6 +1,7 @@
 package project.fronend;
 
 import project.encryptions.aes;
+import project.encryptions.aesUIWrapper;
 import project.keys.*;
 import project.keys.ChaosGame.*;
 import project.keys.ChaosGame.Shape;
@@ -8,6 +9,8 @@ import project.keys.Kseq.*;
 import project.keys.graphs.*;
 
 import java.io.File;
+import java.util.concurrent.Flow;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 
@@ -80,15 +83,17 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 		this.selecteEncryption = enctype;
 		System.out.println("Main class recived encryption type:" + selecteEncryption.toString());
 
-        boolean alreadyExists = false;
+        Component existing = null;
 		for (Component comp : panelContainer.getComponents()) {
-			if ("Panel 3".equals(panelContainer.getLayout().toString())) {
-				alreadyExists = true;
-				break;
+			if (panelContainer.getComponentZOrder(comp) != -1) {
+				if ("Panel 3".equals(panelContainer.getClientProperty(comp))) {
+					existing = comp;
+					break;
+				}
 			}
 		}
 
-		if (!alreadyExists) 
+		if (existing == null) 
 			panelContainer.add(new action(selecteEncryption, cardLayout, panelContainer, selectedFile), "Panel 3");
 
 		cardLayout.show(panelContainer, "Panel 3");
@@ -186,6 +191,9 @@ class action extends JPanel
 	JPanel algoPanel;
 	private CardLayout cardLayout;
     private JPanel panelContainer;
+	public JButton backButton;
+	public JProgressBar bar;
+	public aes a;
 	encryptionType type;
 
 	public action(encryptionType type,CardLayout cardLayout, JPanel panelContainer,File FilePtr)
@@ -194,22 +202,41 @@ class action extends JPanel
 		this.FileSizeEncrypt = (int)((FilePtr.length() + 15)/ 16) * 16;
 		System.out.println("file size: " + FileSizeEncrypt);
 		this.type = type;
+		this.a = new aes();
 		this.cardLayout = cardLayout;
 		this.panelContainer = panelContainer;
-		setLayout(new FlowLayout());
+		setLayout(new BorderLayout());
 		setPreferredSize(new Dimension(WIDTH,HEIGHT));
 		
+		createUpperMenu();
 		activateAlgo();
 
-		new Thread(()->{
-			//runEncryption();
-			runDecryption();
-			System.out.println("finished encryption");
-		}).start();
-
-		//this.cardLayout.show(this.panelContainer, "Panel 1");
+		new Thread(new aesUIWrapper(a, bar, backButton, key, FilePtr)).start();
 	}
 
+	private void createUpperMenu()
+	{
+		JPanel upperMenu = new JPanel(new BorderLayout());
+		this.backButton = new JButton("HomePage");
+		backButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				cardLayout.show(panelContainer, "Panel 1");
+			}
+			
+		});
+		backButton.setEnabled(false);
+		upperMenu.add(backButton,BorderLayout.EAST);
+
+		bar = new JProgressBar();
+		bar.setValue(0);
+		bar.setStringPainted(true);
+		upperMenu.add(bar,BorderLayout.CENTER);
+		
+		add(upperMenu,BorderLayout.NORTH);
+	}
+	
 	private void activateAlgo()
 	{
 		switch (this.type) {
@@ -228,7 +255,9 @@ class action extends JPanel
 				System.out.println("erorr in choosing algoritem");
 				break;
 		}
-		add(algoPanel);
+		add(algoPanel,BorderLayout.SOUTH);
+		revalidate();  // Force layout update
+    	repaint();
 	}
 
 	private JPanel ChaosgameActive()
@@ -236,7 +265,7 @@ class action extends JPanel
 		int verticesAmount =(int)(FileSizeEncrypt % 4) + 3;
 		System.out.println(verticesAmount);
 		int seed = (FileSizeEncrypt % 10000) + 1;
-		Shape shape = new Shape(seed, verticesAmount, this.WIDTH, this.HEIGHT);
+		Shape shape = new Shape(seed, verticesAmount, this.WIDTH, 700);
 		ChaosgamePanel ch =new ChaosgamePanel(shape);
 
 		this.key = shape;

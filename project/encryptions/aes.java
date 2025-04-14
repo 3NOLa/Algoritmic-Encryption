@@ -275,7 +275,7 @@ public class aes {
         return plaintext;
     }
     
-    private void padding(byte[] plaintext,int amountofBytes)
+    public void padding(byte[] plaintext,int amountofBytes)
     {
         byte padValue = (byte)(16 - amountofBytes);
         System.out.println("padValue: " + padValue);
@@ -283,7 +283,7 @@ public class aes {
             plaintext[i] = padValue;
     }
 
-    private byte[] invPadding(byte[] data) {
+    public byte[] invPadding(byte[] data) {
         if (data.length == 0) return data;
         
         int padValue = data[data.length - 1] & 0xff;

@@ -11,7 +11,7 @@ public class GraphVisualizer extends JPanel {
     private static final int HORIZONTAL_SPACING = 100;
     private final visualizeGraph layoutManager;
     private final HashMap<Vertex, Point2D> vertexPositions;
-    private int height = 800;
+    private int height = 700;
     private int width = 800;
 
     public GraphVisualizer(visualizeGraph layoutManager) {

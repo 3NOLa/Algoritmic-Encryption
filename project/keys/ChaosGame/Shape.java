@@ -99,6 +99,7 @@ public class Shape implements Keys{
 
         return inside;
     }
+    
     public byte[] getKey16(){
         byte key[] = new byte[16];
 
