@@ -14,21 +14,26 @@ public class aesUIWrapper implements Runnable {
     private JButton back;
 	private Keys key;
     private File FilePtr;
+    private boolean encrypt;
 
-    public aesUIWrapper(aes a,JProgressBar bar,JButton back,Keys key,File FilePtr){
+    public aesUIWrapper(aes a,JProgressBar bar,JButton back,Keys key,File FilePtr,boolean encrypt){
         this.a = a;
         this.bar = bar;
         this.back = back;
         this.key = key;
         this.FilePtr = FilePtr;
+        this.encrypt = encrypt;
     }
 
     @Override
     public void run()
     {
         byte[] key = this.key.getKey16();
-		//this.encryptFile(FilePtr, key);
-        this.decryptFile(FilePtr, key);
+
+        if (encrypt) 
+            this.encryptFile(FilePtr, key);
+		else
+            this.decryptFile(FilePtr, key);
     }
 
     public File encryptFile(File f, byte[] key)
@@ -112,6 +117,7 @@ public class aesUIWrapper implements Runnable {
             fileout.close();
             filein.close();
 
+            SwingUtilities.invokeLater(() -> this.bar.setValue(100));
             System.out.println("finished Decryption");
 			bar.setString("Done Decryption");
 			back.setEnabled(true);

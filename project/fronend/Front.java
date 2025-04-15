@@ -37,10 +37,12 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 {
 	private final int WIDTH = 800;
     private final int HEIGHT = 800;
+	private JPanel mainPanel;
 	private CardLayout cardLayout;
     private JPanel panelContainer;
 	private File selectedFile;
 	private encryptionType selecteEncryption;
+	private boolean encrypt = true;
 
 	public Front()
 	{
@@ -48,55 +50,112 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 		setSize(WIDTH,HEIGHT);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-
+		
 		cardLayout = new CardLayout();
         panelContainer = new JPanel(cardLayout);
 
-		panelContainer.add(new Jopen(this,cardLayout,panelContainer), "Panel 1");
+		createMainPanel();
+
+		panelContainer.add(mainPanel, "Panel 1");
 
         add(panelContainer);
-
         setVisible(true);
+	}
+
+	private void createMainPanel()
+	{
+		mainPanel = new JPanel();
+		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+		mainPanel.setPreferredSize(new Dimension(WIDTH,HEIGHT));
+
+		Jopen selectFileMenu = new Jopen(this);
+		mainPanel.add(selectFileMenu);
+
+		JPanel optionPanel = createOptionPanel();
+		mainPanel.add(optionPanel);
+
+		encryptionSelect keysMenu = new encryptionSelect(this);
+		mainPanel.add(keysMenu);
+
+		JPanel startPanel = createStartPanel();
+		mainPanel.add(startPanel);
+	}
+
+	private JPanel createStartPanel()
+	{
+		JPanel startPanel = new JPanel(new BorderLayout());
+		startPanel.setPreferredSize(new Dimension(WIDTH,200));
+
+		JButton startButton = new JButton("Start");
+		startButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Component existing = null;
+				for (Component comp : panelContainer.getComponents()) {
+					if (panelContainer.getComponentZOrder(comp) != -1) {
+						if ("Panel 3".equals(panelContainer.getClientProperty(comp))) {
+							existing = comp;
+							break;
+						}
+					}
+				}
+
+				if (existing == null) 
+					panelContainer.add(new action(selecteEncryption, cardLayout, panelContainer, selectedFile,encrypt), "Panel 3");
+
+				cardLayout.show(panelContainer, "Panel 3");
+			}
+		});
+
+		startPanel.add(startButton,BorderLayout.CENTER);
+
+		return startPanel;
+	}
+
+	private JPanel createOptionPanel()
+	{
+		JPanel optionPanel = new JPanel();
+		optionPanel.setPreferredSize(new Dimension(WIDTH,200));
+
+		JPanel gridPanel = new JPanel(new GridLayout(1,2));
+
+		JButton encryptButton = new JButton("Encrypt");
+		JButton decryptButton = new JButton("Decrypt");
+		
+		ActionListener Option = new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JButton b = (JButton)e.getSource();
+
+				if(b.getText().equals("Encrypt"))
+					encrypt = true;
+				else
+					encrypt = false;
+			}
+			
+		};
+		encryptButton.addActionListener(Option);
+		decryptButton.addActionListener(Option);
+
+		gridPanel.add(encryptButton);
+		gridPanel.add(decryptButton);
+
+		optionPanel.add(gridPanel);
+		return optionPanel;
 	}
 
 	public void onFileSelected(File file)
 	{
 		this.selectedFile = file;
 		System.out.println("Main class received file: " + selectedFile.getAbsolutePath());
-
-		boolean alreadyExists = false;
-		for (Component comp : panelContainer.getComponents()) {
-			if ("Panel 2".equals(panelContainer.getLayout().toString())) {
-				alreadyExists = true;
-				break;
-			}
-		}
-
-		if (!alreadyExists) 
-			panelContainer.add(new encryptionSelect(this,cardLayout,panelContainer), "Panel 2");
-		
-		cardLayout.show(panelContainer, "Panel 2");
 	}
 
 	public 	void onEncryptionSelected(encryptionType enctype)
 	{
 		this.selecteEncryption = enctype;
 		System.out.println("Main class recived encryption type:" + selecteEncryption.toString());
-
-        Component existing = null;
-		for (Component comp : panelContainer.getComponents()) {
-			if (panelContainer.getComponentZOrder(comp) != -1) {
-				if ("Panel 3".equals(panelContainer.getClientProperty(comp))) {
-					existing = comp;
-					break;
-				}
-			}
-		}
-
-		if (existing == null) 
-			panelContainer.add(new action(selecteEncryption, cardLayout, panelContainer, selectedFile), "Panel 3");
-
-		cardLayout.show(panelContainer, "Panel 3");
 	}
 	
 	public static void main(String[] args) 
@@ -108,10 +167,10 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 class Jopen extends JPanel implements ActionListener
 {
 	private final int WIDTH = 800;
-    private final int HEIGHT = 800;
+    private final int HEIGHT = 200;
     private FileSelectedListener listener;
 
-	public Jopen(FileSelectedListener listener,CardLayout cardLayout, JPanel panelContainer)
+	public Jopen(FileSelectedListener listener)
 	{
 		this.listener = listener;
 		setLayout(new FlowLayout());
@@ -143,10 +202,10 @@ class Jopen extends JPanel implements ActionListener
 class encryptionSelect extends JPanel implements ActionListener
 {
 	private final int WIDTH = 800;
-    private final int HEIGHT = 800;
+    private final int HEIGHT = 200;
     private encryptionTypeListener listener;
 
-	public encryptionSelect(encryptionTypeListener listener,CardLayout cardLayout, JPanel panelContainer)
+	public encryptionSelect(encryptionTypeListener listener)
 	{
 		this.listener = listener;
 		setLayout(new FlowLayout());
@@ -188,20 +247,23 @@ class action extends JPanel
 	private File FilePtr;
 	private int FileSizeEncrypt;
 	private Keys key;
-	JPanel algoPanel;
+	private JPanel algoPanel;
 	private CardLayout cardLayout;
     private JPanel panelContainer;
+	private encryptionType type;
 	public JButton backButton;
 	public JProgressBar bar;
 	public aes a;
-	encryptionType type;
+	public boolean encrypt;
+	
 
-	public action(encryptionType type,CardLayout cardLayout, JPanel panelContainer,File FilePtr)
+	public action(encryptionType type,CardLayout cardLayout, JPanel panelContainer,File FilePtr,boolean encrypt)
 	{
 		this.FilePtr = FilePtr;
-		this.FileSizeEncrypt = (int)((FilePtr.length() + 15)/ 16) * 16;
+		this.FileSizeEncrypt = (encrypt)?(int)((FilePtr.length() + 16)/ 16) * 16:(int)FilePtr.length();
 		System.out.println("file size: " + FileSizeEncrypt);
 		this.type = type;
+		this.encrypt = encrypt;
 		this.a = new aes();
 		this.cardLayout = cardLayout;
 		this.panelContainer = panelContainer;
@@ -211,7 +273,7 @@ class action extends JPanel
 		createUpperMenu();
 		activateAlgo();
 
-		new Thread(new aesUIWrapper(a, bar, backButton, key, FilePtr)).start();
+		new Thread(new aesUIWrapper(a, bar, backButton, key, FilePtr,encrypt)).start();
 	}
 
 	private void createUpperMenu()
@@ -303,17 +365,4 @@ class action extends JPanel
 
 		return gh;
 	}
-
-	private void runEncryption() {
-		byte[] key = this.key.getKey16();
-		aes a = new aes();
-		a.encryptFile(FilePtr, key);
-	}
-	
-	private void runDecryption() {
-		byte[] key = this.key.getKey16();
-		aes a = new aes();
-		a.decryptFile(FilePtr, key);
-	}
-	
 }
