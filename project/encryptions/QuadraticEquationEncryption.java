@@ -34,9 +34,9 @@ class structEncrypt implements Serializable{
     }
 }
 
-public class QuadraticEquationEncryption {
-    private File filePtr;
-    private int fileSize;
+public class QuadraticEquationEncryption extends encryption{
+    public File filePtr;
+    public int fileSize;
 
     public QuadraticEquationEncryption(File f)
     {

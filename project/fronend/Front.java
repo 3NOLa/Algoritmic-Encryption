@@ -1,7 +1,11 @@
 package project.fronend;
 
+import project.encryptions.wrapper;
+import project.encryptions.QuadraticEWrapper;
+import project.encryptions.QuadraticEquationEncryption;
 import project.encryptions.aes;
 import project.encryptions.aesUIWrapper;
+import project.encryptions.encryption;
 import project.keys.*;
 import project.keys.ChaosGame.*;
 import project.keys.ChaosGame.Shape;
@@ -9,17 +13,12 @@ import project.keys.Kseq.*;
 import project.keys.graphs.*;
 
 import java.io.File;
-import java.util.concurrent.Flow;
-
 import javax.swing.*;
-import javax.swing.border.Border;
-
-import java.awt.datatransfer.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-enum encryptionType{
+enum keysType{
 	Chaosgame,
 	Ksequence,
 	TopologicalSort
@@ -29,11 +28,11 @@ interface FileSelectedListener {
     void onFileSelected(File file);
 }
 
-interface encryptionTypeListener{
-	void onEncryptionSelected(encryptionType enctype);
+interface keysTypeListener{
+	void onkeysSelected(keysType enctype);
 }
 
-public class Front extends JFrame implements FileSelectedListener,encryptionTypeListener
+public class Front extends JFrame implements FileSelectedListener,keysTypeListener
 {
 	private final int WIDTH = 800;
     private final int HEIGHT = 800;
@@ -41,7 +40,9 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 	private CardLayout cardLayout;
     private JPanel panelContainer;
 	private File selectedFile;
-	private encryptionType selecteEncryption;
+	private keysType selectetKey;
+	private encryption encryptionType;
+	private wrapper encWrapper;
 	private boolean encrypt = true;
 
 	public Front()
@@ -74,8 +75,11 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 		JPanel optionPanel = createOptionPanel();
 		mainPanel.add(optionPanel);
 
-		encryptionSelect keysMenu = new encryptionSelect(this);
+		keysSelect keysMenu = new keysSelect(this);
 		mainPanel.add(keysMenu);
+
+		JPanel encMenu = createEncOptionPanel();
+		mainPanel.add(encMenu);
 
 		JPanel startPanel = createStartPanel();
 		mainPanel.add(startPanel);
@@ -84,7 +88,7 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 	private JPanel createStartPanel()
 	{
 		JPanel startPanel = new JPanel(new BorderLayout());
-		startPanel.setPreferredSize(new Dimension(WIDTH,200));
+		startPanel.setPreferredSize(new Dimension(WIDTH,160));
 
 		JButton startButton = new JButton("Start");
 		startButton.addActionListener(new ActionListener() {
@@ -102,7 +106,7 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 				}
 
 				if (existing == null) 
-					panelContainer.add(new action(selecteEncryption, cardLayout, panelContainer, selectedFile,encrypt), "Panel 3");
+					panelContainer.add(new action(selectetKey, cardLayout, panelContainer, selectedFile,encryptionType, encWrapper, encrypt), "Panel 3");
 
 				cardLayout.show(panelContainer, "Panel 3");
 			}
@@ -116,7 +120,7 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 	private JPanel createOptionPanel()
 	{
 		JPanel optionPanel = new JPanel();
-		optionPanel.setPreferredSize(new Dimension(WIDTH,200));
+		optionPanel.setPreferredSize(new Dimension(WIDTH,160));
 
 		JPanel gridPanel = new JPanel(new GridLayout(1,2));
 
@@ -146,16 +150,56 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 		return optionPanel;
 	}
 
+	private JPanel createEncOptionPanel()
+	{
+		JPanel optionPanel = new JPanel();
+		optionPanel.setPreferredSize(new Dimension(WIDTH,160));
+
+		JPanel gridPanel = new JPanel(new GridLayout(1,2));
+
+		JButton aes = new JButton("aes Encryption");
+		JButton Quadratic = new JButton("Quadratic Equation Encryption");
+		
+		ActionListener EncOption = new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JButton b = (JButton)e.getSource();
+
+				if(b.getText().equals("aes Encryption"))
+				{
+					encryptionType = new aes();
+					encWrapper = new aesUIWrapper(encryptionType, null, b, null, selectedFile, encrypt);
+				}
+				else
+				{
+					encryptionType = new QuadraticEquationEncryption(selectedFile);
+					encWrapper = new QuadraticEWrapper(encryptionType, null, b, null, selectedFile, encrypt);
+				}
+			}
+			
+		};
+
+		aes.addActionListener(EncOption);
+		Quadratic.addActionListener(EncOption);
+
+		gridPanel.add(aes);
+		gridPanel.add(Quadratic);
+
+		optionPanel.add(gridPanel);
+		return optionPanel;
+	}
+
 	public void onFileSelected(File file)
 	{
 		this.selectedFile = file;
 		System.out.println("Main class received file: " + selectedFile.getAbsolutePath());
 	}
 
-	public 	void onEncryptionSelected(encryptionType enctype)
+	public 	void onkeysSelected(keysType enctype)
 	{
-		this.selecteEncryption = enctype;
-		System.out.println("Main class recived encryption type:" + selecteEncryption.toString());
+		this.selectetKey = enctype;
+		System.out.println("Main class recived encryption type:" + selectetKey.toString());
 	}
 	
 	public static void main(String[] args) 
@@ -167,7 +211,7 @@ public class Front extends JFrame implements FileSelectedListener,encryptionType
 class Jopen extends JPanel implements ActionListener
 {
 	private final int WIDTH = 800;
-    private final int HEIGHT = 200;
+    private final int HEIGHT = 160;
     private FileSelectedListener listener;
 
 	public Jopen(FileSelectedListener listener)
@@ -199,13 +243,13 @@ class Jopen extends JPanel implements ActionListener
 
 }
 
-class encryptionSelect extends JPanel implements ActionListener
+class keysSelect extends JPanel implements ActionListener
 {
 	private final int WIDTH = 800;
-    private final int HEIGHT = 200;
-    private encryptionTypeListener listener;
+    private final int HEIGHT = 160;
+    private keysTypeListener listener;
 
-	public encryptionSelect(encryptionTypeListener listener)
+	public keysSelect(keysTypeListener listener)
 	{
 		this.listener = listener;
 		setLayout(new FlowLayout());
@@ -221,10 +265,10 @@ class encryptionSelect extends JPanel implements ActionListener
 
 	public void createButtons(JPanel choices)
 	{
-		for (encryptionType type : encryptionType.values())
+		for (keysType type : keysType.values())
 		{
 			JButton button = new JButton(type.name());
-    		button.putClientProperty("encryptionType", type);
+    		button.putClientProperty("keysType", type);
     		button.addActionListener(this);
     		choices.add(button);
 		}
@@ -234,7 +278,7 @@ class encryptionSelect extends JPanel implements ActionListener
 	{
 		JButton clicked = (JButton) e.getSource();
 		if (listener != null) {
-			listener.onEncryptionSelected((encryptionType)clicked.getClientProperty("encryptionType"));
+			listener.onkeysSelected((keysType)clicked.getClientProperty("keysType"));
 		}
 	}
 
@@ -250,30 +294,36 @@ class action extends JPanel
 	private JPanel algoPanel;
 	private CardLayout cardLayout;
     private JPanel panelContainer;
-	private encryptionType type;
+	private keysType type;
 	public JButton backButton;
 	public JProgressBar bar;
-	public aes a;
+	public encryption enc;
+	public wrapper encWrapper;
 	public boolean encrypt;
+	public Thread t;
 	
 
-	public action(encryptionType type,CardLayout cardLayout, JPanel panelContainer,File FilePtr,boolean encrypt)
+	public action(keysType type,CardLayout cardLayout, JPanel panelContainer,File FilePtr,encryption enc, wrapper encWrapper,boolean encrypt)
 	{
-		this.FilePtr = FilePtr;
-		this.FileSizeEncrypt = (encrypt)?(int)((FilePtr.length() + 16)/ 16) * 16:(int)FilePtr.length();
-		System.out.println("file size: " + FileSizeEncrypt);
-		this.type = type;
-		this.encrypt = encrypt;
-		this.a = new aes();
 		this.cardLayout = cardLayout;
 		this.panelContainer = panelContainer;
 		setLayout(new BorderLayout());
 		setPreferredSize(new Dimension(WIDTH,HEIGHT));
-		
+
+		this.FilePtr = FilePtr;
+		this.FileSizeEncrypt = (encrypt)?(int)((FilePtr.length() + 16)/ 16) * 16:(int)FilePtr.length();
+		this.type = type;
+		this.encrypt = encrypt;
+
 		createUpperMenu();
 		activateAlgo();
 
-		new Thread(new aesUIWrapper(a, bar, backButton, key, FilePtr,encrypt)).start();
+		this.enc = enc;
+		this.encWrapper = encWrapper;
+		this.encWrapper.setParmeters(bar, backButton, key, this.FilePtr, encrypt);
+
+		this.t = new Thread(this.encWrapper);
+		this.t.start();
 	}
 
 	private void createUpperMenu()
@@ -285,6 +335,11 @@ class action extends JPanel
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				cardLayout.show(panelContainer, "Panel 1");
+				try {
+					t.join();
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
 			}
 			
 		});
@@ -318,7 +373,7 @@ class action extends JPanel
 				break;
 		}
 		add(algoPanel,BorderLayout.SOUTH);
-		revalidate();  // Force layout update
+		revalidate();
     	repaint();
 	}
 

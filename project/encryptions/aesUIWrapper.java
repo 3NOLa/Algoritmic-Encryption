@@ -8,45 +8,35 @@ import javax.swing.*;
 
 import project.keys.Keys;
 
-public class aesUIWrapper implements Runnable {
+public class aesUIWrapper extends wrapper {
     private aes a;
-    private JProgressBar bar;
-    private JButton back;
-	private Keys key;
-    private File FilePtr;
-    private boolean encrypt;
 
-    public aesUIWrapper(aes a,JProgressBar bar,JButton back,Keys key,File FilePtr,boolean encrypt){
-        this.a = a;
-        this.bar = bar;
-        this.back = back;
-        this.key = key;
-        this.FilePtr = FilePtr;
-        this.encrypt = encrypt;
+    public aesUIWrapper(encryption e,JProgressBar bar,JButton back,Keys key,File FilePtr,boolean encrypt){
+        super(e, bar, back, key, FilePtr, encrypt);
+        a = (aes)e;
     }
 
     @Override
     public void run()
     {
-        byte[] key = this.key.getKey16();
-
-        if (encrypt) 
-            this.encryptFile(FilePtr, key);
+        if (this.encrypt) 
+            this.encryptFile();
 		else
-            this.decryptFile(FilePtr, key);
+            this.decryptFile();
     }
 
-    public File encryptFile(File f, byte[] key)
+    @Override
+    public File encryptFile()
     {
-        File encrypted = new File(f.getParent(),a.changeFileName(f, "encrypted"));
-        long totalBytes = f.length();
+        File encrypted = new File(this.FilePtr.getParent(),a.changeFileName(this.FilePtr, "encrypted"));
+        long totalBytes = this.FilePtr.length();
         long bytesRead = 0;
-        byte expandKey[][][] = a.expandKey(key);
+        byte expandKey[][][] = a.expandKey(this.key_16);
         byte plaintext[] = new byte[16];
         byte cipher[];
         
         try{
-            FileInputStream filein = new FileInputStream(f);
+            FileInputStream filein = new FileInputStream(this.FilePtr);
             FileOutputStream fileout = new FileOutputStream(encrypted);
             boolean addPadding = false;
             int amountofBytes;
@@ -86,14 +76,14 @@ public class aesUIWrapper implements Runnable {
         return encrypted;
     }
 
-    public File decryptFile(File f, byte[] key) {
-        File decrypted = new File(f.getParent(),a.changeFileName(f, "decrypted"));
-        byte expandKey[][][] = a.expandKey(key);
+    public File decryptFile() {
+        File decrypted = new File(this.FilePtr.getParent(),a.changeFileName(this.FilePtr, "decrypted"));
+        byte expandKey[][][] = a.expandKey(this.key_16);
         try {
-            FileInputStream filein = new FileInputStream(f);
+            FileInputStream filein = new FileInputStream(this.FilePtr);
             FileOutputStream fileout = new FileOutputStream(decrypted);
             
-            long fileSize = f.length();
+            long fileSize = this.FilePtr.length();
             int numBlocks = (int)(fileSize / 16);
             byte[] cipherBlock = new byte[16];
             byte[] plainBlock;

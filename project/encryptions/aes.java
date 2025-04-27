@@ -65,7 +65,7 @@ final class aesConstants{
     private aesConstants(){};
 }
 
-public class aes {
+public class aes extends encryption{
 
      // GF(2⁸) multiplication functions in a utility class
      public static byte gfMultiply(byte a, byte b) {

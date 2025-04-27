@@ -4,7 +4,7 @@ import java.io.File;
 
 import project.keys.Kseq.*;
 
-public class sequenceEncryption {
+public class sequenceEncryption extends encryption{
     private Ksequence key;
     private File FilePtr;
     private int fileSize;
