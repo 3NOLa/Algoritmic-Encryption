@@ -95,20 +95,28 @@ public class Front extends JFrame implements FileSelectedListener,keysTypeListen
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Component existing = null;
-				for (Component comp : panelContainer.getComponents()) {
-					if (panelContainer.getComponentZOrder(comp) != -1) {
-						if ("Panel 3".equals(panelContainer.getClientProperty(comp))) {
-							existing = comp;
-							break;
+				if(selectedFile != null)
+				{
+					Component existing = null;
+					for (Component comp : panelContainer.getComponents()) {
+						if (panelContainer.getComponentZOrder(comp) != -1) {
+							if ("Panel 3".equals(panelContainer.getClientProperty(comp))) {
+								existing = comp;
+								break;
+							}
 						}
 					}
+
+					if (existing == null) 
+						panelContainer.add(new action(selectetKey, cardLayout, panelContainer, selectedFile,encryptionType, encWrapper, encrypt), "Panel 3");
+
+					cardLayout.show(panelContainer, "Panel 3");
 				}
-
-				if (existing == null) 
-					panelContainer.add(new action(selectetKey, cardLayout, panelContainer, selectedFile,encryptionType, encWrapper, encrypt), "Panel 3");
-
-				cardLayout.show(panelContainer, "Panel 3");
+				else
+				{
+					JOptionPane.showMessageDialog(null, "DIDNT SELECTED A FILE", "ENCRYPTION ERORR", 
+                                           JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		});
 
@@ -312,15 +320,15 @@ class action extends JPanel
 
 		this.FilePtr = FilePtr;
 		this.FileSizeEncrypt = (encrypt)?(int)((FilePtr.length() + 16)/ 16) * 16:(int)FilePtr.length();
-		this.type = type;
+		this.type = (type != null)?type : keysType.Chaosgame;
 		this.encrypt = encrypt;
 
 		createUpperMenu();
 		activateAlgo();
 
-		this.enc = enc;
-		this.encWrapper = encWrapper;
-		this.encWrapper.setParmeters(bar, backButton, key, this.FilePtr, encrypt);
+		this.enc =(enc != null)?enc : new aes();
+		this.encWrapper = (encWrapper != null)? encWrapper : new aesUIWrapper(this.enc, bar, backButton,key ,  this.FilePtr, this.encrypt);
+		this.encWrapper.setParmeters(bar, backButton, key, this.FilePtr, this.encrypt);
 
 		this.t = new Thread(this.encWrapper);
 		this.t.start();
