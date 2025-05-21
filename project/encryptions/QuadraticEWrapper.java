@@ -35,25 +35,31 @@ public class QuadraticEWrapper extends wrapper{
         File encrypted = new File(q.filePtr.getParent(),q.changeFileName(q.filePtr, "encrypted"));
         try{
             FileInputStream filein = new FileInputStream(FilePtr);
-            ObjectOutputStream fileout = new ObjectOutputStream(new FileOutputStream(encrypted));
-            byte twoBytes [] = new byte[2];
-            
-            for(int i=0;i<q.fileSize /2;i++)
-            {
-                filein.read(twoBytes);
-                q.subTwoBytes(twoBytes);
-                structEncrypt s = new structEncrypt((int)twoBytes[0], (int)twoBytes[1]);
-                fileout.writeObject(s);
-                int percent = (int)((i * 100) / q.fileSize);
-                SwingUtilities.invokeLater(() -> this.bar.setValue(percent));
-            }
+            ObjectOutputStream fileout = new ObjectOutputStream(new FileOutputStream(encrypted));            
+            byte FileBytes [] = new byte[1024];
+            int totalBytes = 0;
+            int bytesRead;
 
-            if (q.fileSize % 2 == 1) {
-                byte oneByte = (byte)filein.read();
-                twoBytes[0] = twoBytes[1] = oneByte;
-                q.subTwoBytes(twoBytes);
-                structEncrypt s = new structEncrypt((int)twoBytes[0], (int)twoBytes[1]);
-                fileout.writeObject(s);
+            while((bytesRead = filein.read(FileBytes)) != -1)
+            {
+                if (bytesRead % 2 == 1) FileBytes[bytesRead + 1] = FileBytes[bytesRead];
+
+                structEncrypt fileObjects[] = new structEncrypt[bytesRead/2];  
+                for(int j=0;j<bytesRead;j+=2)
+                {
+                    byte twoBytes [] = new byte[2];
+                    twoBytes[0] = FileBytes[j];
+                    twoBytes[1] = FileBytes[j+1];
+
+                    q.subTwoBytes(twoBytes);
+                    structEncrypt s = new structEncrypt((int)twoBytes[0], (int)twoBytes[1]);
+                    fileObjects[j/2] = s;
+
+                    totalBytes += 2;
+                    int percent = (int)((totalBytes * 100) / q.fileSize);
+                    SwingUtilities.invokeLater(() -> this.bar.setValue(percent));
+                }
+                fileout.writeObject(fileObjects);
             }
 
             fileout.close();
@@ -80,26 +86,43 @@ public class QuadraticEWrapper extends wrapper{
         try{
             ObjectInputStream filein = new ObjectInputStream(new FileInputStream(q.filePtr));
             FileOutputStream fileout = new FileOutputStream(decrypted);
-            structEncrypt current = (structEncrypt)filein.readObject();
-            byte twoBytes [] = new byte[2];
+            structEncrypt[] current = (structEncrypt[])filein.readObject();
             try{
                 while(true)
                 {
-                    structEncrypt next = (structEncrypt) filein.readObject();
-                    twoBytes = current.QuadraticEquation();
-                    q.invSubTwoBytes(twoBytes);
-                    fileout.write(twoBytes);
+                    structEncrypt[] next = (structEncrypt[]) filein.readObject();
+                    byte objectBytes [] = new byte[current.length * 2];
+                    for(int i =0;i<current.length;i++)
+                    {
+                        byte[] twoBytes = current[i].QuadraticEquation();
+                        q.invSubTwoBytes(twoBytes);
+                        objectBytes[i * 2] = twoBytes[0];
+                        objectBytes[(i * 2) + 1] = twoBytes[1];
+                        bytesRead += 2;
+                        int percent = (int)((bytesRead * 100) / totalBytes);
+                        SwingUtilities.invokeLater(() -> this.bar.setValue(percent));
+                    }
+                    fileout.write(objectBytes);
                     current = next;
-                    bytesRead += 2;
-                    int percent = (int)((bytesRead * 100) / totalBytes);
-                    SwingUtilities.invokeLater(() -> this.bar.setValue(percent));
+
                 }
             }
             catch(EOFException eof)
             {
-                twoBytes = current.QuadraticEquation();
-                q.invSubTwoBytes(twoBytes);
-                fileout.write(twoBytes[0]);
+                int bytesLength = current.length * 2;
+                if(current.length % 2 == 1)
+                    bytesLength--;
+
+                byte objectBytes [] = new byte[bytesLength * 2];
+                for(int i =0;i<current.length;i++)
+                {
+                    byte[] twoBytes = current[i].QuadraticEquation();
+                    q.invSubTwoBytes(twoBytes);
+                    objectBytes[i * 2] = twoBytes[0];
+                    if(i*2 + 1 < bytesLength)
+                        objectBytes[(i * 2) + 1] = twoBytes[1];
+                }
+                fileout.write(objectBytes);
             }
             
             fileout.close();

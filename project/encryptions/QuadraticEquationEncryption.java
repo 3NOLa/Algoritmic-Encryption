@@ -67,27 +67,30 @@ public class QuadraticEquationEncryption extends encryption{
     public File encryptFile()
     {
         File encrypted = new File(filePtr.getParent(),changeFileName(filePtr, "encrypted"));
-        try{
+        try(
             FileInputStream filein = new FileInputStream(filePtr);
-            ObjectOutputStream fileout = new ObjectOutputStream(new FileOutputStream(encrypted));
-            byte twoBytes [] = new byte[2];
-            
-            for(int i=0;i<fileSize /2;i++)
+            ObjectOutputStream fileout = new ObjectOutputStream(new FileOutputStream(encrypted));)
+        {
+            byte FileBytes [] = new byte[1024];
+            int bytesRead;
+
+            while((bytesRead = filein.read(FileBytes)) != -1)
             {
-                filein.read(twoBytes);
-                subTwoBytes(twoBytes);
-                structEncrypt s = new structEncrypt((int)twoBytes[0], (int)twoBytes[1]);
-                fileout.writeObject(s);
-            }
+                if (bytesRead % 2 == 1) FileBytes[bytesRead + 1] = FileBytes[bytesRead];
 
-            if (fileSize % 2 == 1) {
-                byte oneByte = (byte)filein.read();
-                twoBytes[0] = twoBytes[1] = oneByte;
-                subTwoBytes(twoBytes);
-                structEncrypt s = new structEncrypt((int)twoBytes[0], (int)twoBytes[1]);
-                fileout.writeObject(s);
-            }
+                structEncrypt fileObjects[] = new structEncrypt[bytesRead/2];  
+                for(int j=0;j<bytesRead;j+=2)
+                {
+                    byte twoBytes [] = new byte[2];
+                    twoBytes[0] = FileBytes[j];
+                    twoBytes[1] = FileBytes[j+1];
 
+                    subTwoBytes(twoBytes);
+                    structEncrypt s = new structEncrypt((int)twoBytes[0], (int)twoBytes[1]);
+                    fileObjects[j/2] = s;
+                }
+                fileout.writeObject(fileObjects);
+            }
             fileout.close();
             filein.close();
         }
@@ -95,7 +98,6 @@ public class QuadraticEquationEncryption extends encryption{
             System.out.println("Error encrypting file: " + e.getMessage());
             e.printStackTrace();
         }
-        
         return encrypted;
     }
 
@@ -105,23 +107,39 @@ public class QuadraticEquationEncryption extends encryption{
         try{
             ObjectInputStream filein = new ObjectInputStream(new FileInputStream(filePtr));
             FileOutputStream fileout = new FileOutputStream(decrypted);
-            structEncrypt current = (structEncrypt)filein.readObject();
-            byte twoBytes [] = new byte[2];
+            structEncrypt[] current = (structEncrypt[])filein.readObject();
             try{
                 while(true)
                 {
-                    structEncrypt next = (structEncrypt) filein.readObject();
-                    twoBytes = current.QuadraticEquation();
-                    invSubTwoBytes(twoBytes);
-                    fileout.write(twoBytes);
+                    structEncrypt[] next = (structEncrypt[]) filein.readObject();
+                    byte objectBytes [] = new byte[current.length * 2];
+                    for(int i =0;i<current.length;i++)
+                    {
+                        byte[] twoBytes = current[i].QuadraticEquation();
+                        invSubTwoBytes(twoBytes);
+                        objectBytes[i * 2] = twoBytes[0];
+                        objectBytes[(i * 2) + 1] = twoBytes[1];
+                    }
+                    fileout.write(objectBytes);
                     current = next;
                 }
             }
             catch(EOFException eof)
             {
-                twoBytes = current.QuadraticEquation();
-                invSubTwoBytes(twoBytes);
-                fileout.write(twoBytes[0]);
+                int bytesLength = current.length * 2;
+                if(current.length % 2 == 1)
+                    bytesLength--;
+
+                byte objectBytes [] = new byte[bytesLength * 2];
+                for(int i =0;i<current.length;i++)
+                {
+                    byte[] twoBytes = current[i].QuadraticEquation();
+                    invSubTwoBytes(twoBytes);
+                    objectBytes[i * 2] = twoBytes[0];
+                    if(i*2 + 1 < bytesLength)
+                        objectBytes[(i * 2) + 1] = twoBytes[1];
+                }
+                fileout.write(objectBytes);
             }
             
             fileout.close();
@@ -142,8 +160,10 @@ public class QuadraticEquationEncryption extends encryption{
         for(byte x : t)
             System.out.println(x);
         QuadraticEquationEncryption q = new QuadraticEquationEncryption(new File("C:\\Users\\keyna\\PycharmProjects\\pythonProject3\\alon2.py"));
-        File encrypted_file = q.encryptFile();
-        System.out.println(encrypted_file.getAbsolutePath() + "\n");
+        
+            File encrypted_file = q.encryptFile();
+            System.out.println(encrypted_file.getAbsolutePath() + "\n");
+            
         
         QuadraticEquationEncryption qd = new QuadraticEquationEncryption(new File("C:\\\\Users\\\\keyna\\\\PycharmProjects\\\\pythonProject3\\\\alon2encrypted.py"));
         File decrypted_file = qd.decryptFile();

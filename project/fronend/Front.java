@@ -387,7 +387,7 @@ class action extends JPanel
 
 	private JPanel ChaosgameActive()
 	{
-		int verticesAmount =(int)(FileSizeEncrypt % 4) + 3;
+		int verticesAmount =(int)((FileSizeEncrypt/16) % 4) + 3;
 		System.out.println(verticesAmount);
 		int seed = (FileSizeEncrypt % 10000) + 1;
 		Shape shape = new Shape(seed, verticesAmount, this.WIDTH, 700);
